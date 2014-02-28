@@ -157,6 +157,8 @@ public class FileTaker {
 
 
 			public static void main(String[] args) {
+				long timestart = System.currentTimeMillis();
+
 				lexics=new ArrayList<>();
 				for(String s:args){
 					//					System.out.println(s);
@@ -188,8 +190,8 @@ public class FileTaker {
 					analyzer(filescanner.nextLine());
 				}
 				//Se supone que aparezcan por linea
-				System.out.println();
-
+				long timefinish = System.currentTimeMillis();
+				System.out.println("Total time is:"+Long.toString(timefinish-timestart));
 			}
 
 

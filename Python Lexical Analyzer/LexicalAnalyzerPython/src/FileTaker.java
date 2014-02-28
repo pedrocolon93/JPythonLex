@@ -44,12 +44,16 @@ public class FileTaker {
 			identifiers= new LinkedList<>(), keywords= new LinkedList<>(), floatlit= new LinkedList<>(), longlit = new LinkedList<>(), intlit = new LinkedList<>(),
 			operators= new LinkedList<>(), stringlits= new LinkedList<>(), imaginarylit = new LinkedList<>();
 			private static ArrayList<Tuple> lexics2 = new ArrayList<>();
+			//IDENTIFIERS DELIMITERS Y OPERATORS
 			/**
 			 * Analyzes before sending to procesor
 			 * @param nextLine
 			 */
 			private static void analyzer(String nextLine) {
 				// TODO Auto-generated method stub
+				if(nextLine.equals("    for str in string.split(line):")){
+					System.out.println();
+				}
 				System.out.println("Next line is:"+nextLine+"\n");
 				String s1 = indentation(nextLine);
 
@@ -76,24 +80,27 @@ public class FileTaker {
 				//				System.out.println("So far:"+s7);
 
 
-				processor(s7);
+				processor(s7, nextLine);
 
 			}
 
 
-			private static void processor(String analyzedLine) {
-				Matcher m = Pattern.compile("(\\$[^$]*)").matcher(analyzedLine);
+			private static void processor(String analyzedLine, String originalLine) {
+				Matcher m = Pattern.compile("(\\$(c|fi|il|li|d|o|s|ii|kw|id|i))").matcher(analyzedLine);
 				while(m.find()) {
 					//					System.out.println("Meta found");
 					//					System.out.println(m.group(1));
 					String metachar = m.group(1);
-					String tryas = "$kw";
 					//c|fi|li|i|d|o|s|ii
 					if(metachar.trim().equals("$c")){
 						lexics2.add(comments.poll());
 					}
 					else if (metachar.trim().equals("$fi")){
 						lexics2.add(floatlit.poll());
+
+					}
+					else if (metachar.trim().equals("$il")){
+						lexics2.add(imaginarylit.poll());
 
 					}
 					else if (metachar.trim().equals("$li")){
@@ -132,7 +139,9 @@ public class FileTaker {
 						lexics2.add(new Tuple("UNIDENTIFIED", "DUNNO"));
 					}
 				}
-
+				if(delimiters.size()>0||identifiers.size()>0||operators.size()>0){
+					System.out.println("Problem here");
+				}
 				for(Tuple t:currentline){
 					System.out.println(t.getClassification()+" "+t.getKeyword());
 				}
@@ -165,7 +174,7 @@ public class FileTaker {
 				}
 				//String filename = args[0];
 
-				String filename = "./files/example.py";
+				String filename = "./files/lexemes.txt";
 
 				File inputprogram = new File(filename);
 				Scanner filescanner = null;
@@ -179,6 +188,7 @@ public class FileTaker {
 					analyzer(filescanner.nextLine());
 				}
 				//Se supone que aparezcan por linea
+				System.out.println();
 
 			}
 
@@ -336,7 +346,7 @@ public class FileTaker {
 					//					System.out.println(ipm.group(1));
 					imaginarylit.add(new Tuple(ipm.group(1), "Imaginary literal"));
 				}
-				String noimag = s.replaceAll(imaginarynumber,"\\$ii");
+				String noimag = s.replaceAll(imaginarynumber,"\\$il");
 
 				String exponent = "((e|E)(\\+|-)?[0-9]+)",
 						fraction = "(\\.[0-9]+)",
@@ -351,7 +361,7 @@ public class FileTaker {
 					//					System.out.println(fpm.group(1));
 					floatlit.add(new Tuple(fpm.group(1), "Float literal"));
 				}
-				String nofloat = s.replaceAll(floatnumber,"\\$fi");
+				String nofloat = noimag.replaceAll(floatnumber,"\\$fi");
 
 				Matcher m = Pattern.compile(longinteger).matcher(nofloat);
 				while(m.find()) {
@@ -402,10 +412,10 @@ public class FileTaker {
 				String identifier = "(("+letter+"|_)("+letter+"|"+digit+"|_)*)";
 				//		System.out.println("Identifier regex "+identifier);
 
-				String[] breakdown = word.split("\\s");
+				String[] breakdown = word.split("\\s+");
 				for(String item:breakdown){
 
-					item = item.replaceAll(("\\$(c|fi|li|i|d|o|s|ii)"), " ");
+					item = item.replaceAll(("\\$(c|fi|li|il|i|d|o|s)"), " ");
 					String[] splititem = item.split("\\s+");
 					for(String split:splititem){
 						Matcher mli= Pattern.compile(identifier).matcher(split);
@@ -414,12 +424,13 @@ public class FileTaker {
 							//							System.out.println("Identifier found");
 							//							System.out.println(mli.group(1));
 							//lexics.add(new Tuple(m.group(1),"Operator"));
+							String s = mli.group(1);
 							if(isKeyword(mli.group(1))){
-								word = word.replace(mli.group(1), "$kw");
+								word = word.replaceFirst(mli.group(1), "\\$kw");
 								keywords.add(new Tuple(mli.group(1),"Keyword"));
 							}
 							else{
-								word = word.replace(mli.group(1), "$id");
+								word = word.replaceFirst(mli.group(1), "\\$id");
 								identifiers.add(new Tuple(mli.group(1),"Identifier"));
 							}
 						}

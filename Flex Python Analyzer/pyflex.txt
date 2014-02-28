@@ -1,0 +1,113 @@
+%option noyywrap
+/* scanner for a toy Pascal-like language */
+
+%{
+	#include <math.h>
+	#include <stdio.h>
+	#include <time.h>
+%}
+COMMENT  "#".*$
+KEYWORD "and"|"del"|"from"|"not"|"while"|"as"|"elif"|"global"|"or"|"with"|"assert"|"else"|"if"|"pass"|"yield"|"break"|"except"|"import"|"print"|"class"|"exec"|"in"|"raise"|"continue"|"finally"|"is"|"return"|"def"|"for"|"lambda"|"try"
+OPERATOR "+"|"-"|"*"|"**"|"/"|"//"|"%"|"<<"|">>"|"&"|"|"|"^"|"~"|"<"|">"|"<="|">="|"=="|"!="|"<>"
+DELIMETER "("|")"|"["|"]"|"{"|"}"|"@"|","|":"|"."|"`"|"="|";"|"+="|"-="|"*="|"/="|"//="|"%="|"&="|"|="|"^="|">>="|"<<="|"**="
+DIGIT 		   [0-9]
+NONZERODIGIT   [1-9]
+EXPONENT 	   ("e"|"E")([+|-])?({DIGIT})+
+FRACTION 	   "\."({DIGIT})+
+INTPART 	   ({DIGIT})+
+POINTFLOAT	   ({INTPART})?({FRACTION}|({INTPART}"\."))
+EXPONENTFLOAT  ({INTPART}|{POINTFLOAT})({EXPONENT})
+FLOATNUM       ({POINTFLOAT}|{EXPONENTFLOAT})
+
+OCTDIGIT       [0-7]
+BINDIGIT       ("0"|"1")
+HEXDIGIT       ({DIGIT})|[a-f]|[A-F]
+DECIMALINTEGER  ({NONZERODIGIT})*|"0"
+OCTINTEGER     "0"("o"|"O")({OCTDIGIT})+|"0"({OCTDIGIT})+
+HEXINTEGER     "0"("x"|"X")({HEXDIGIT})+
+BININTEGER     "0"("b"|"B")({BINDIGIT})+
+INTEGER        ({DECIMALINTEGER})|({OCTINTEGER})|({HEXINTEGER})|({BININTEGER})
+LONGINTEGER    ({INTEGER})("l"|"L")
+
+ESCAPESEQ       "\\"[ -~]
+LONGSTRINGCHAR  [^"\\"]
+SHORTSTRINGCHAR ([^\"\r\n\\])
+SHORTSTRINGITEM {SHORTSTRINGCHAR}|{ESCAPESEQ}
+LONGSTRINGITEM  {LONGSTRINGCHAR}|{ESCAPESEQ}
+SHORTSTRING  "'"{SHORTSTRINGITEM}*"'"|'"'{SHORTSTRINGITEM}*'"'
+LONGSTRING  "'''"({LONGSTRINGITEM})*"'''"|"\"\"\""({LONGSTRINGITEM})*"\"\"\""
+STRINGPREFIX    "r"|"u"|"ur"|"R"|"U"|"UR"|"Ur"|"uR"|"b"|"B"|"br"|"Br"|"bR"|"BR"
+STRINGLITERAL	({STRINGPREFIX})?({SHORTSTRING}|{LONGSTRING})
+
+LOWERCASE    [a-z]
+UPPERCASE    [A-Z]
+LETTER       {LOWERCASE}|{UPPERCASE}
+IDENTIFIER   ({LETTER}|"_")({LETTER}|{DIGIT}|"_")*
+
+IMAGNUMBER ({FLOATNUM}|{INTPART})("j"|"J")
+%%
+{COMMENT}   {
+			printf("A comment: %s\n", yytext); 
+			}
+			
+{KEYWORD}   {
+			printf("A keyword: %s\n", yytext); 
+			}	
+{DELIMETER} {
+			printf("A delimiter: %s\n", yytext); 
+			}
+			
+{OPERATOR}  {
+            printf( "An operator: %s\n", yytext);
+            }
+            
+{IMAGNUMBER}  {
+			printf("An imaginary number: %s\n", yytext);
+			}
+			
+{FLOATNUM}  {
+			printf("A float: %s\n", yytext);
+			}
+						
+{INTEGER}   {
+			printf("A int: %s\n", yytext);
+			}
+
+{LONGINTEGER}   {
+			printf("A long int: %s\n", yytext);
+			}
+{STRINGLITERAL}   {
+			printf("A string lit: %s\n", yytext);
+			}	
+{IDENTIFIER}   {
+			printf("An identifier: %s\n", yytext);
+			}
+[\n]			{
+			printf("A new line: %s\n", yytext);
+			}
+
+%%
+
+main( argc, argv )
+int argc;
+char **argv;
+    {
+  clock_t t;
+  int f;
+  t = clock();
+  printf ("Calculating...\n");
+  
+ 
+  
+    ++argv, --argc;  /* skip over program name */
+    if ( argc > 0 )
+            yyin = fopen( argv[0], "r" );
+    else
+            yyin = stdin;
+
+    yylex();
+	
+	t = clock() - t;
+  printf ("It took me %d clicks (%f seconds).\n",t,((float)t)/CLOCKS_PER_SEC);
+	return 0;
+    }

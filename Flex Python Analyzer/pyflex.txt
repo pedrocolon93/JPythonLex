@@ -1,15 +1,23 @@
 %option noyywrap
-/* scanner for a toy Pascal-like language */
+/* A scanner for python */
 
 %{
 	#include <math.h>
 	#include <stdio.h>
 	#include <time.h>
+	FILE *f = fopen("flexout.txt", "a+");
+
 %}
+
+
+
 COMMENT  "#".*$
 KEYWORD "and"|"del"|"from"|"not"|"while"|"as"|"elif"|"global"|"or"|"with"|"assert"|"else"|"if"|"pass"|"yield"|"break"|"except"|"import"|"print"|"class"|"exec"|"in"|"raise"|"continue"|"finally"|"is"|"return"|"def"|"for"|"lambda"|"try"
 OPERATOR "+"|"-"|"*"|"**"|"/"|"//"|"%"|"<<"|">>"|"&"|"|"|"^"|"~"|"<"|">"|"<="|">="|"=="|"!="|"<>"
 DELIMETER "("|")"|"["|"]"|"{"|"}"|"@"|","|":"|"."|"`"|"="|";"|"+="|"-="|"*="|"/="|"//="|"%="|"&="|"|="|"^="|">>="|"<<="|"**="
+
+
+
 DIGIT 		   [0-9]
 NONZERODIGIT   [1-9]
 EXPONENT 	   ("e"|"E")([+|-])?({DIGIT})+
@@ -45,45 +53,42 @@ LETTER       {LOWERCASE}|{UPPERCASE}
 IDENTIFIER   ({LETTER}|"_")({LETTER}|{DIGIT}|"_")*
 
 IMAGNUMBER ({FLOATNUM}|{INTPART})("j"|"J")
+
+
 %%
 {COMMENT}   {
-			printf("A comment: %s\n", yytext); 
+			fprintf(f, "A comment: %s\n", yytext);
 			}
-			
 {KEYWORD}   {
-			printf("A keyword: %s\n", yytext); 
-			}	
+			fprintf(f, "A keyword: %s\n", yytext);
+			}
 {DELIMETER} {
-			printf("A delimiter: %s\n", yytext); 
+			fprintf(f, "A delimiter: %s\n", yytext);
 			}
-			
 {OPERATOR}  {
-            printf( "An operator: %s\n", yytext);
+			fprintf(f,  "An operator: %s\n", yytext);
             }
-            
 {IMAGNUMBER}  {
-			printf("An imaginary number: %s\n", yytext);
+			fprintf(f,  "An imaginary number: %s\n", yytext);
 			}
-			
 {FLOATNUM}  {
-			printf("A float: %s\n", yytext);
+			fprintf(f,  "A float: %s\n", yytext);
 			}
-						
 {INTEGER}   {
-			printf("A int: %s\n", yytext);
+			fprintf(f,  "An int: %s\n", yytext);
 			}
 
 {LONGINTEGER}   {
-			printf("A long int: %s\n", yytext);
+			fprintf(f,  "A long int: %s\n", yytext);
 			}
 {STRINGLITERAL}   {
-			printf("A string lit: %s\n", yytext);
-			}	
-{IDENTIFIER}   {
-			printf("An identifier: %s\n", yytext);
+			fprintf(f,  "A string lit: %s\n", yytext);
 			}
-[\n]			{
-			printf("A new line: %s\n", yytext);
+{IDENTIFIER}    {
+			fprintf(f,  "An identifier: %s\n", yytext);
+			}
+[\n]		{
+			fprintf(f,  "A new line: %s\n", yytext);
 			}
 
 %%
@@ -92,13 +97,12 @@ main( argc, argv )
 int argc;
 char **argv;
     {
-  clock_t t;
-  int f;
-  t = clock();
-  printf ("Calculating...\n");
-  
- 
-  
+
+    clock_t t;
+    int f;
+    t = clock();
+	f = fopen("flexout.txt", "a+");
+
     ++argv, --argc;  /* skip over program name */
     if ( argc > 0 )
             yyin = fopen( argv[0], "r" );
@@ -106,8 +110,9 @@ char **argv;
             yyin = stdin;
 
     yylex();
-	
+
 	t = clock() - t;
-  printf ("It took me %d clicks (%f seconds).\n",t,((float)t)/CLOCKS_PER_SEC);
+	fprintf(f,  "It took me %d clicks (%f seconds).\n",t,((float)t)/CLOCKS_PER_SEC);
+	fclose(f);
 	return 0;
     }

@@ -1,12 +1,14 @@
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 
 public class FileTaker {
 	private static class Tuple{
@@ -42,7 +44,7 @@ public class FileTaker {
 	private static ArrayList<Tuple> lexics,currentline = new ArrayList<>();
 	private static Queue<Tuple> comments = new LinkedList<>(), delimiters= new LinkedList<>(), 
 			identifiers= new LinkedList<>(), keywords= new LinkedList<>(), floatlit= new LinkedList<>(), longlit = new LinkedList<>(), intlit = new LinkedList<>(),
-			operators= new LinkedList<>(), stringlits= new LinkedList<>(), imaginarylit = new LinkedList<>();
+			operators= new LinkedList<>(), stringlits= new LinkedList<>(), imaginarylit = new LinkedList<>(), unidentified = new LinkedList<>();
 			private static ArrayList<Tuple> lexics2 = new ArrayList<>();
 			//IDENTIFIERS DELIMITERS Y OPERATORS
 			/**
@@ -50,11 +52,29 @@ public class FileTaker {
 			 * @param nextLine
 			 */
 			private static void analyzer(String nextLine) {
-				// TODO Auto-generated method stub
-				if(nextLine.equals("    for str in string.split(line):")){
+				if(nextLine.contains("# Add the coefficient, if needed.")){
 					System.out.println();
 				}
-				System.out.println("Next line is:"+nextLine+"\n");
+				//Print next line to console 
+				//				System.out.println("Next line is:"+nextLine+"\n");
+				File output = new File("jout.txt");
+				if(!output.exists()){
+					try {
+						output.createNewFile();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				}
+				FileOutputStream fo = null;
+				try {
+					fo = new FileOutputStream(output,true);
+				} catch (FileNotFoundException e1) {
+					e1.printStackTrace();
+				}
+				PrintWriter outprinter = new PrintWriter(fo);
+				outprinter.println("Next line is:"+nextLine+"\n");
+
+				//
 				String s1 = indentation(nextLine);
 
 				//Remueve string de la linea
@@ -79,14 +99,31 @@ public class FileTaker {
 
 				//				System.out.println("So far:"+s7);
 
+				String s8 = unidentified(s7);
 
-				processor(s7, nextLine);
+				processor(s8, nextLine);
+
+			}
+
+
+			private static String unidentified(String s7) {
+				String linewithoutdollars = s7.replaceAll("(\\$(c|fi|il|li|d|o|s|ii|kw|id|i))", "");
+				String output = s7;
+				if(!linewithoutdollars.replaceAll("\\s+", "").equals("")){
+					Matcher m = Pattern.compile("(\\S)").matcher(linewithoutdollars);
+					while(m.find()) {
+						String unid = m.group(1);
+						unidentified.add(new Tuple(m.group(1),"Unidentified"));
+						output = output.replaceAll(m.group(1),"\\$U");
+					}
+				}
+				return output;
 
 			}
 
 
 			private static void processor(String analyzedLine, String originalLine) {
-				Matcher m = Pattern.compile("(\\$(c|fi|il|li|d|o|s|ii|kw|id|i))").matcher(analyzedLine);
+				Matcher m = Pattern.compile("(\\$(c|fi|il|li|d|o|s|ii|kw|id|i|U))").matcher(analyzedLine);
 				while(m.find()) {
 					//					System.out.println("Meta found");
 					//					System.out.println(m.group(1));
@@ -136,27 +173,66 @@ public class FileTaker {
 
 					}
 					else{
-						lexics2.add(new Tuple("UNIDENTIFIED", "DUNNO"));
+						lexics2.add(unidentified.poll());
 					}
 				}
-				if(delimiters.size()>0||identifiers.size()>0||operators.size()>0){
-					System.out.println("Problem here");
+
+				//				if(unidentified.size()!=0){
+				//					System.out.println();
+				//				}
+
+				File output = new File("jout.txt");
+				if(!output.exists()){
+					try {
+						output.createNewFile();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
 				}
+				FileOutputStream fo = null;
+				try {
+					fo = new FileOutputStream(output,true);
+				} catch (FileNotFoundException e1) {
+					e1.printStackTrace();
+				}
+				PrintWriter outprinter = new PrintWriter(fo);
 				for(Tuple t:currentline){
-					System.out.println(t.getClassification()+" "+t.getKeyword());
+					outprinter.println(t.getClassification()+" "+t.getKeyword());
 				}
-				currentline.clear();
 				for(Tuple t:lexics2){
 					if(t!=null){
-						System.out.println(t.getClassification()+" "+t.getKeyword());						
+						outprinter.println(t.getClassification()+" "+t.getKeyword());						
 					}
 				}
+				outprinter.println("Line done\n");
+
+				outprinter.close();
+				//Print to console
+//								if(delimiters.size()>0||identifiers.size()>0||operators.size()>0){
+//									System.out.println("Problem here");
+//								}
+//								for(Tuple t:currentline){
+//									System.out.println(t.getClassification()+" "+t.getKeyword());
+//								}
+//								for(Tuple t:lexics2){
+//									if(t!=null){
+//										System.out.println(t.getClassification()+" "+t.getKeyword());						
+//									}
+//								}
+//
+//								System.out.println("Line done\n");
+
+				currentline.clear();
+
 				lexics2.clear();
-				System.out.println("Line done\n");
 			}
 
 
 			public static void main(String[] args) {
+				File f = new File("jout.txt");
+				if(f.exists()){
+					f.delete();
+				}
 				long timestart = System.currentTimeMillis();
 
 				lexics=new ArrayList<>();
@@ -168,7 +244,6 @@ public class FileTaker {
 				try {
 					keywordscanner = new Scanner(new File("./files/keywords.txt"));
 				} catch (FileNotFoundException e1) {
-					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				}
 				while(keywordscanner.hasNextLine()){
@@ -183,7 +258,6 @@ public class FileTaker {
 				try {
 					filescanner = new Scanner(inputprogram);
 				} catch (FileNotFoundException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 				while(filescanner.hasNextLine()){
@@ -192,6 +266,25 @@ public class FileTaker {
 				//Se supone que aparezcan por linea
 				long timefinish = System.currentTimeMillis();
 				System.out.println("Total time is:"+Long.toString(timefinish-timestart));
+
+				File output = new File("jout.txt");
+				if(!output.exists()){
+					try {
+						output.createNewFile();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				}
+				FileOutputStream fo = null;
+				try {
+					fo = new FileOutputStream(output,true);
+				} catch (FileNotFoundException e1) {
+					e1.printStackTrace();
+				}
+				PrintWriter outprinter = new PrintWriter(fo);
+
+				outprinter.println("Total time is:"+Long.toString(timefinish-timestart));
+				outprinter.close();
 			}
 
 
@@ -210,7 +303,9 @@ public class FileTaker {
 
 				String stringprefix =  "(r|u|ur|R|U|UR|Ur|uR)";//OK
 				String shortstringchar= "([^\"\\r\\n\\])";//ok
-				String longstringchar = "([^\\])";//ok
+				//				String longstringchar = "([^\\])";//ok
+				//				String longstringchar = "([^\\\\])";//okcorrect
+
 				String escapeseq = "([\\][ -~])";//ok
 
 
@@ -288,12 +383,17 @@ public class FileTaker {
 					else if(!input.substring(1).substring(0,1).equals(tab)&&times<indents.size()){
 						//Tengo una de indentacion
 						//remuevo un indent
-						indents.remove(indents.size()-1);
-
+						
 						currentline.add(new Tuple("\t","indentacion"));
-
+						for(int i =0; i<indents.size()-times;i++){
 						lexics.add(new Tuple("\\-t","deindent"));
 						currentline.add(new Tuple("\\-t","deindent"));
+						}
+						int size =indents.size()-times;
+						for(int i =0;i<size;i++){
+							indents.remove(indents.size()-1);
+						}
+
 
 					}
 					else if(!lexics.get(lexics.size()-1).getClassification().equals("deindent")){

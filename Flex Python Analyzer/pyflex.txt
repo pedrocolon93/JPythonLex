@@ -1,23 +1,15 @@
 %option noyywrap
-/* A scanner for python */
+/* scanner for a toy Pascal-like language */
 
 %{
 	#include <math.h>
 	#include <stdio.h>
 	#include <time.h>
-	FILE *f = fopen("flexout.txt", "a+");
-
 %}
-
-
-
 COMMENT  "#".*$
 KEYWORD "and"|"del"|"from"|"not"|"while"|"as"|"elif"|"global"|"or"|"with"|"assert"|"else"|"if"|"pass"|"yield"|"break"|"except"|"import"|"print"|"class"|"exec"|"in"|"raise"|"continue"|"finally"|"is"|"return"|"def"|"for"|"lambda"|"try"
 OPERATOR "+"|"-"|"*"|"**"|"/"|"//"|"%"|"<<"|">>"|"&"|"|"|"^"|"~"|"<"|">"|"<="|">="|"=="|"!="|"<>"
 DELIMETER "("|")"|"["|"]"|"{"|"}"|"@"|","|":"|"."|"`"|"="|";"|"+="|"-="|"*="|"/="|"//="|"%="|"&="|"|="|"^="|">>="|"<<="|"**="
-
-
-
 DIGIT 		   [0-9]
 NONZERODIGIT   [1-9]
 EXPONENT 	   ("e"|"E")([+|-])?({DIGIT})+
@@ -28,22 +20,22 @@ EXPONENTFLOAT  ({INTPART}|{POINTFLOAT})({EXPONENT})
 FLOATNUM       ({POINTFLOAT}|{EXPONENTFLOAT})
 
 OCTDIGIT       [0-7]
-BINDIGIT       ("0"|"1")
+BINDIGIT       (0|1)
 HEXDIGIT       ({DIGIT})|[a-f]|[A-F]
-DECIMALINTEGER  ({NONZERODIGIT})*|"0"
-OCTINTEGER     "0"("o"|"O")({OCTDIGIT})+|"0"({OCTDIGIT})+
-HEXINTEGER     "0"("x"|"X")({HEXDIGIT})+
-BININTEGER     "0"("b"|"B")({BINDIGIT})+
-INTEGER        ({DECIMALINTEGER})|({OCTINTEGER})|({HEXINTEGER})|({BININTEGER})
+DECIMALINTEGER  (({NONZERODIGIT})({DIGIT})*|0)
+OCTINTEGER     (0)("o"|"O")({OCTDIGIT})+|"0"({OCTDIGIT})+
+HEXINTEGER     (0)("x"|"X")({HEXDIGIT})+
+BININTEGER     (0)("b"|"B")({BINDIGIT})+
+INTEGER        (({DECIMALINTEGER})|({OCTINTEGER})|({HEXINTEGER})|({BININTEGER}))
 LONGINTEGER    ({INTEGER})("l"|"L")
 
-ESCAPESEQ       "\\"[ -~]
-LONGSTRINGCHAR  [^"\\"]
-SHORTSTRINGCHAR ([^\"\r\n\\])
+ESCAPESEQ ([\\])([ -~])
+LONGSTRINGCHAR [^\\]
+SHORTSTRINGCHAR ([^\"\r\\n\\])
 SHORTSTRINGITEM {SHORTSTRINGCHAR}|{ESCAPESEQ}
 LONGSTRINGITEM  {LONGSTRINGCHAR}|{ESCAPESEQ}
-SHORTSTRING  "'"{SHORTSTRINGITEM}*"'"|'"'{SHORTSTRINGITEM}*'"'
-LONGSTRING  "'''"({LONGSTRINGITEM})*"'''"|"\"\"\""({LONGSTRINGITEM})*"\"\"\""
+SHORTSTRING  "\'"{SHORTSTRINGITEM}*"\'"|"\""{SHORTSTRINGITEM}*"\""
+LONGSTRING  "\'\'\'"({LONGSTRINGITEM})*"\'\'\'"|"\"\"\""({LONGSTRINGITEM})*"\"\"\""
 STRINGPREFIX    "r"|"u"|"ur"|"R"|"U"|"UR"|"Ur"|"uR"|"b"|"B"|"br"|"Br"|"bR"|"BR"
 STRINGLITERAL	({STRINGPREFIX})?({SHORTSTRING}|{LONGSTRING})
 
@@ -54,42 +46,52 @@ IDENTIFIER   ({LETTER}|"_")({LETTER}|{DIGIT}|"_")*
 
 IMAGNUMBER ({FLOATNUM}|{INTPART})("j"|"J")
 
-
+INDENTATION ^("    "|\t)
 %%
-{COMMENT}   {
-			fprintf(f, "A comment: %s\n", yytext);
-			}
-{KEYWORD}   {
-			fprintf(f, "A keyword: %s\n", yytext);
-			}
-{DELIMETER} {
-			fprintf(f, "A delimiter: %s\n", yytext);
-			}
-{OPERATOR}  {
-			fprintf(f,  "An operator: %s\n", yytext);
-            }
-{IMAGNUMBER}  {
-			fprintf(f,  "An imaginary number: %s\n", yytext);
-			}
-{FLOATNUM}  {
-			fprintf(f,  "A float: %s\n", yytext);
-			}
-{INTEGER}   {
-			fprintf(f,  "An int: %s\n", yytext);
-			}
 
-{LONGINTEGER}   {
-			fprintf(f,  "A long int: %s\n", yytext);
+{INDENTATION}    {
+			printf("An indentation: %s\n", yytext);
 			}
 {STRINGLITERAL}   {
-			fprintf(f,  "A string lit: %s\n", yytext);
+			printf("A string lit: %s\n", yytext);
 			}
-{IDENTIFIER}    {
-			fprintf(f,  "An identifier: %s\n", yytext);
+
+{COMMENT}   {
+			printf("A comment: %s\n", yytext);
+			}
+{IMAGNUMBER}  {
+			printf("An imaginary number: %s\n", yytext);
+			}
+
+{FLOATNUM}  {
+			printf("A float: %s\n", yytext);
+			}
+{LONGINTEGER}   {
+			printf("A long int: %s\n", yytext);
+			}
+
+{INTEGER}   {
+			printf("A int: %s\n", yytext);
+			}
+{OPERATOR}  {
+            printf( "An operator: %s\n", yytext);
+            }
+
+{DELIMETER} {
+			printf("A delimiter: %s\n", yytext);
+			}
+
+{KEYWORD}   {
+			printf("A keyword: %s\n", yytext);
+			}
+
+{IDENTIFIER}   {
+			printf("An identifier: %s\n", yytext);
 			}
 [\n]		{
-			fprintf(f,  "A new line: %s\n", yytext);
+			printf("A new line: %s\n", yytext);
 			}
+[ ] /* Eat remaining whitespace */
 
 %%
 
@@ -97,22 +99,17 @@ main( argc, argv )
 int argc;
 char **argv;
     {
-
-    clock_t t;
-    int f;
-    t = clock();
-	f = fopen("flexout.txt", "a+");
-
-    ++argv, --argc;  /* skip over program name */
-    if ( argc > 0 )
-            yyin = fopen( argv[0], "r" );
+	clock_t t;
+  	int f;
+  	t = clock();
+  	printf ("Calculating...\n");
+  	++argv, --argc;  /* skip over program name */
+  	if ( argc > 0 )
+        yyin = fopen( argv[0], "r" );
     else
-            yyin = stdin;
-
-    yylex();
-
+        yyin = stdin;
+  	yylex();
 	t = clock() - t;
-	fprintf(f,  "It took me %d clicks (%f seconds).\n",t,((float)t)/CLOCKS_PER_SEC);
-	fclose(f);
+  	printf ("It took me %d clicks (%f seconds).\n",t,((float)t)/CLOCKS_PER_SEC);
 	return 0;
     }

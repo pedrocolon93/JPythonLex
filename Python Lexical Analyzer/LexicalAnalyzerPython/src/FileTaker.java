@@ -52,27 +52,27 @@ public class FileTaker {
 			 * @param nextLine
 			 */
 			private static void analyzer(String nextLine) {
-				if(nextLine.contains("# Add the coefficient, if needed.")){
+				if(nextLine.contains("1805857909 del # SAHJBCASJDBCADCBAJSCBSDCHJSAJDC \"GESE\" 0.4317813j")){
 					System.out.println();
 				}
 				//Print next line to console 
-				//				System.out.println("Next line is:"+nextLine+"\n");
-				File output = new File("jout.txt");
-				if(!output.exists()){
-					try {
-						output.createNewFile();
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-				}
-				FileOutputStream fo = null;
-				try {
-					fo = new FileOutputStream(output,true);
-				} catch (FileNotFoundException e1) {
-					e1.printStackTrace();
-				}
-				PrintWriter outprinter = new PrintWriter(fo);
-				outprinter.println("Next line is:"+nextLine+"\n");
+				System.out.println("Next line is:"+nextLine+"\n");
+				//				File output = new File("jout.txt");
+				//				if(!output.exists()){
+				//					try {
+				//						output.createNewFile();
+				//					} catch (IOException e) {
+				//						e.printStackTrace();
+				//					}
+				//				}
+				//				FileOutputStream fo = null;
+				//				try {
+				//					fo = new FileOutputStream(output,true);
+				//				} catch (FileNotFoundException e1) {
+				//					e1.printStackTrace();
+				//				}
+				//				PrintWriter outprinter = new PrintWriter(fo);
+				//				outprinter.println("Next line is:"+nextLine+"\n");
 
 				//
 				String s1 = indentation(nextLine);
@@ -176,51 +176,54 @@ public class FileTaker {
 						lexics2.add(unidentified.poll());
 					}
 				}
+				if(stringlits.size()!=0){
+					System.out.println();
+				}
 
 				//				if(unidentified.size()!=0){
 				//					System.out.println();
 				//				}
 
-				File output = new File("jout.txt");
-				if(!output.exists()){
-					try {
-						output.createNewFile();
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
+				//				File output = new File("jout.txt");
+				//				if(!output.exists()){
+				//					try {
+				//						output.createNewFile();
+				//					} catch (IOException e) {
+				//						e.printStackTrace();
+				//					}
+				//				}
+				//				FileOutputStream fo = null;
+				//				try {
+				//					fo = new FileOutputStream(output,true);
+				//				} catch (FileNotFoundException e1) {
+				//					e1.printStackTrace();
+				//				}
+				//				PrintWriter outprinter = new PrintWriter(fo);
+				//				for(Tuple t:currentline){
+				//					outprinter.println(t.getClassification()+" "+t.getKeyword());
+				//				}
+				//				for(Tuple t:lexics2){
+				//					if(t!=null){
+				//						outprinter.println(t.getClassification()+" "+t.getKeyword());						
+				//					}
+				//				}
+				//				outprinter.println("Line done\n");
+				//
+				//				outprinter.close();
+				//Print to console
+				if(delimiters.size()>0||identifiers.size()>0||operators.size()>0){
+					System.out.println("Problem here");
 				}
-				FileOutputStream fo = null;
-				try {
-					fo = new FileOutputStream(output,true);
-				} catch (FileNotFoundException e1) {
-					e1.printStackTrace();
-				}
-				PrintWriter outprinter = new PrintWriter(fo);
 				for(Tuple t:currentline){
-					outprinter.println(t.getClassification()+" "+t.getKeyword());
+					System.out.println(t.getClassification()+" "+t.getKeyword());
 				}
 				for(Tuple t:lexics2){
 					if(t!=null){
-						outprinter.println(t.getClassification()+" "+t.getKeyword());						
+						System.out.println(t.getClassification()+" "+t.getKeyword());						
 					}
 				}
-				outprinter.println("Line done\n");
 
-				outprinter.close();
-				//Print to console
-//								if(delimiters.size()>0||identifiers.size()>0||operators.size()>0){
-//									System.out.println("Problem here");
-//								}
-//								for(Tuple t:currentline){
-//									System.out.println(t.getClassification()+" "+t.getKeyword());
-//								}
-//								for(Tuple t:lexics2){
-//									if(t!=null){
-//										System.out.println(t.getClassification()+" "+t.getKeyword());						
-//									}
-//								}
-//
-//								System.out.println("Line done\n");
+				System.out.println("Line done\n");
 
 				currentline.clear();
 
@@ -346,6 +349,16 @@ public class FileTaker {
 					//System.out.println("Comment found");
 					//System.out.println(m.group(1));
 					//lexics.add(new Tuple(m.group(1),"Comment"));
+					String group = m.group(1);
+					if(stringlits.size()>0){
+						if(group.contains("$s")){
+							while(group.contains("$s")){
+								group = group.replaceFirst("\\$s",	stringlits.poll().keyword);
+								
+							}
+							
+						}
+					}
 					comments.add(new Tuple(m.group(1),"Comment"));
 				}
 				String linewithoutcomment = linewithoutindentation.replaceAll("(#.*$)", "\\$c");
@@ -383,11 +396,11 @@ public class FileTaker {
 					else if(!input.substring(1).substring(0,1).equals(tab)&&times<indents.size()){
 						//Tengo una de indentacion
 						//remuevo un indent
-						
+
 						currentline.add(new Tuple("\t","indentacion"));
 						for(int i =0; i<indents.size()-times;i++){
-						lexics.add(new Tuple("\\-t","deindent"));
-						currentline.add(new Tuple("\\-t","deindent"));
+							lexics.add(new Tuple("\\-t","deindent"));
+							currentline.add(new Tuple("\\-t","deindent"));
 						}
 						int size =indents.size()-times;
 						for(int i =0;i<size;i++){

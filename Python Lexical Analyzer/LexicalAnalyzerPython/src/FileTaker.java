@@ -502,7 +502,7 @@ public class FileTaker {
 				 * (&=|\\|=|\^=|>>=|<<=|\*\*=|:|\.|'|=|;|\+=|-=|\*=|/=|//=|%=|,|\(|\)|\{|\}|@|\[|\])
 
 				 */
-				String delregex = "(&=|\\\\|=|\\^=|>>=|<<=|\\*\\*=|:|\\.|'|=|;|\\+=|-=|\\*=|/=|//=|%=|,|\\(|\\)|\\{|\\}|@|\\[|\\])";
+				String delregex = "(&=|\\\\|\\^=|>>=|<<=|\\*\\*=|:|\\.|'|;|\\+=|-=|\\*=|/=|//=|%=|,|\\(|\\)|\\{|\\}|@|\\[|\\]|=|`)";
 				Matcher m = Pattern.compile(delregex).matcher(word);
 				while(m.find()) {
 					//					System.out.println("Delimiter found");
@@ -560,7 +560,7 @@ public class FileTaker {
 				/**
 				 * +|-|\*|\*\*|/|//|%|<<|>>|&|||^|~|<|>|<=|>=|==|!=|<>
 				 */
-				String opregex = "(\\+|-|\\*|\\*\\*|/|//|%|<<|>>|&|\\||\\^|~|<|>|<=|>=|==|!=|<>)";
+				String opregex = "(\\*\\*|//|<<|>>|<=|>=|==|!=|<>|&|\\||\\^|~|<|>|%|\\+|-|\\*|/)";
 				Matcher m = Pattern.compile(opregex).matcher(word);
 				while(m.find()) {
 					//					System.out.println("Operator found");
